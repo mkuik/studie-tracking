@@ -1,5 +1,6 @@
 package com.example.matthijskuik.studietracker;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -8,6 +9,12 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.LegendRenderer;
+import com.jjoe64.graphview.series.BarGraphSeries;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
 public class StudiepuntenOverzicht extends AppCompatActivity {
 
@@ -26,6 +33,29 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+        GraphView graph = (GraphView) findViewById(R.id.grade_graph);
+        BarGraphSeries<DataPoint> series = new BarGraphSeries<>(new DataPoint[] {
+                new DataPoint(1, 120),
+                new DataPoint(2, 100),
+                new DataPoint(3, 60),
+                new DataPoint(4, 60)
+        });
+        series.setSpacing(10);
+        graph.addSeries(series);
+
+        graph.getGridLabelRenderer().setHorizontalLabelsVisible(true);
+        graph.getGridLabelRenderer().setNumHorizontalLabels(6);
+        graph.getGridLabelRenderer().setGridColor(Color.TRANSPARENT);
+
+        // set manual X bounds
+        graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setMinX(0);
+        graph.getViewport().setMaxX(5);
+
+        // set manual Y bounds
+        graph.getViewport().setYAxisBoundsManual(true);
+        graph.getViewport().setMinY(0);
+        graph.getViewport().setMaxY(120);
     }
 
     @Override
