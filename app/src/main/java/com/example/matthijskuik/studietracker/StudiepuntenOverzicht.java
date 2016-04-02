@@ -1,14 +1,24 @@
 package com.example.matthijskuik.studietracker;
 
+import android.content.Context;
+import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.LegendRenderer;
@@ -16,7 +26,27 @@ import com.jjoe64.graphview.series.BarGraphSeries;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class StudiepuntenOverzicht extends AppCompatActivity {
+
+    private GraphView graph;
+    private ListView courseList;
+    private CourseAdapter courseAdapter;
+    private ArrayList<Course> courseData;
+    private short[] etcs;
+
+    public void addCourse(final Course course) {
+        courseData.add(course);
+        etcs[course.period - 1] += course.ect;
+//        courseAdapter.add(course);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,19 +63,49 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-        GraphView graph = (GraphView) findViewById(R.id.grade_graph);
+        graph = (GraphView) findViewById(R.id.grade_graph);
+        courseList = (ListView) findViewById(R.id.grade_details);
+
+        courseData = new ArrayList<>();
+        etcs = new short[4];
+
+
+        try {
+            JSONArray jsonArray = new JSONArray(getString(R.string.grades));
+            for (int i = 0; i != jsonArray.length(); ++i) {
+                JSONObject obj = jsonArray.getJSONObject(i);
+
+//                Log.i("json" , jsonArray.toString());
+
+                final Course course = new Course(obj.getString("name"),
+                        Short.parseShort(obj.getString("ects")),
+                        Double.parseDouble(obj.getString("grade")),
+                        Short.parseShort(obj.getString("period")));
+                addCourse(course);
+
+                Log.i("course " + i, course.toString());
+                Log.i("item", obj.toString());
+            }
+        } catch (JSONException e) {
+            Log.e("grade rescourse", e.toString());
+        }
+
+        courseAdapter  = new CourseAdapter(this, courseData);
+        courseList.setAdapter(courseAdapter);
+
         BarGraphSeries<DataPoint> series = new BarGraphSeries<>(new DataPoint[] {
-                new DataPoint(1, 120),
-                new DataPoint(2, 100),
-                new DataPoint(3, 60),
-                new DataPoint(4, 60)
+                new DataPoint(1, etcs[0]),
+                new DataPoint(2, etcs[1]),
+                new DataPoint(3, etcs[2]),
+                new DataPoint(4, etcs[3])
         });
-        series.setSpacing(10);
+        series.setSpacing(5);
+        series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
         graph.addSeries(series);
 
         graph.getGridLabelRenderer().setHorizontalLabelsVisible(true);
         graph.getGridLabelRenderer().setNumHorizontalLabels(6);
-        graph.getGridLabelRenderer().setGridColor(Color.TRANSPARENT);
+        graph.getGridLabelRenderer().setNumVerticalLabels(3);
 
         // set manual X bounds
         graph.getViewport().setXAxisBoundsManual(true);
@@ -55,7 +115,10 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         // set manual Y bounds
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setMinY(0);
-        graph.getViewport().setMaxY(120);
+        short max = Short.MIN_VALUE;
+        for (short i : etcs) if (i > max) max = i;
+        graph.getViewport().setMaxY(max);
+
     }
 
     @Override
@@ -79,4 +142,6 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
 }
