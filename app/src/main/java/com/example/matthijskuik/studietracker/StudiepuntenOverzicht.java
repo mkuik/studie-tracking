@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -29,6 +30,7 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,11 +43,33 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
     private CourseAdapter courseAdapter;
     private ArrayList<Course> courseData;
     private short[] etcs;
+    private TextView ectScore;
+    private TextView advice;
+    private TextView name;
+    private TextView period;
 
     public void addCourse(final Course course) {
         courseData.add(course);
         etcs[course.period - 1] += course.ect;
 //        courseAdapter.add(course);
+    }
+
+    public short getSumEct() {
+        short sum = 0;
+        for (short i : etcs) sum += i;
+        return sum;
+    }
+
+    public void notifyEctChange() {
+        final short score = getSumEct();
+        ectScore.setText(String.format("%d ects", score));
+        if (score <= 40) {
+            advice.setText("BSA");
+        } else if (score <= 50) {
+            advice.setText("Blijft zitten");
+        } else {
+            advice.setText("Goed bezig!");
+        }
     }
 
     @Override
@@ -65,10 +89,13 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         });
         graph = (GraphView) findViewById(R.id.grade_graph);
         courseList = (ListView) findViewById(R.id.grade_details);
+        ectScore = (TextView) findViewById(R.id.total_ect);
+        advice = (TextView) findViewById(R.id.advice);
+        name = (EditText) findViewById(R.id.name);
+        period = (TextView) findViewById(R.id.period);
 
         courseData = new ArrayList<>();
         etcs = new short[4];
-
 
         try {
             JSONArray jsonArray = new JSONArray(getString(R.string.grades));
@@ -119,6 +146,7 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         for (short i : etcs) if (i > max) max = i;
         graph.getViewport().setMaxY(max);
 
+        notifyEctChange();
     }
 
     @Override
