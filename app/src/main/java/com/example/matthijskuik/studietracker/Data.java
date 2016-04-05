@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -19,6 +20,7 @@ import java.io.InputStreamReader;
 public class Data {
 
     private Context context;
+    private final String metaFilename = "meta";
 
     public Data(Context context) {
         this.context = context;
@@ -27,11 +29,25 @@ public class Data {
     public Course getCourse(final String name) throws IOException, JSONException {
         FileInputStream fis = context.openFileInput(name);
         final JSONObject obj = new JSONObject(convertStreamToString(fis));
-        final Course course = new Course(obj.getString("name"),
-                Short.parseShort(obj.getString("ects")),
-                Double.parseDouble(obj.getString("grade")),
-                Short.parseShort(obj.getString("period")));
-        return course;
+        fis.close();
+        return new Course(obj);
+    }
+
+    public void setCourse(final Course course) throws IOException, JSONException {
+        FileOutputStream fos = context.openFileOutput(course.name, Context.MODE_PRIVATE);
+        fos.write(course.toJSON().toString().getBytes());
+        fos.close();
+    }
+
+    public JSONArray getCourseNames() throws IOException, JSONException {
+        FileInputStream fis = context.openFileInput(metaFilename);
+        return new JSONArray(convertStreamToString(fis));
+    }
+
+    public void setCourseNames(final JSONArray jsonArray) throws IOException {
+        FileOutputStream fos = context.openFileOutput(metaFilename, Context.MODE_PRIVATE);
+        fos.write(jsonArray.toString().getBytes());
+        fos.close();
     }
 
     public static String convertStreamToString(InputStream is) throws IOException {
@@ -44,5 +60,4 @@ public class Data {
         reader.close();
         return sb.toString();
     }
-
 }

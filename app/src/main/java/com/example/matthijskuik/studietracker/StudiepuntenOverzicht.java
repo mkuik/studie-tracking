@@ -67,7 +67,7 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         short i = 0;
         if (week >= 35 && week <= 46) {
             i = 1;
-        } else if(week <= 53 || week <= 5) {
+        } else if((week >= 47 && week <= 53) || week <= 5) {
             i = 2;
         } else if(week <= 16) {
             i = 3;
@@ -77,6 +77,18 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
             i = 5;
         }
         period.setText(String.format("Period %d", i));
+    }
+
+    public void setupGraphData() {
+        BarGraphSeries<DataPoint> series = new BarGraphSeries<>(new DataPoint[] {
+                new DataPoint(1, etcs[0]),
+                new DataPoint(2, etcs[1]),
+                new DataPoint(3, etcs[2]),
+                new DataPoint(4, etcs[3])
+        });
+        series.setSpacing(5);
+        series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
+        graph.addSeries(series);
     }
 
     @Override
@@ -107,18 +119,7 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         try {
             JSONArray jsonArray = new JSONArray(getString(R.string.grades));
             for (int i = 0; i != jsonArray.length(); ++i) {
-                JSONObject obj = jsonArray.getJSONObject(i);
-
-//                Log.i("json" , jsonArray.toString());
-
-                final Course course = new Course(obj.getString("name"),
-                        Short.parseShort(obj.getString("ects")),
-                        Double.parseDouble(obj.getString("grade")),
-                        Short.parseShort(obj.getString("period")));
-                addCourse(course);
-
-                Log.i("course " + i, course.toString());
-                Log.i("item", obj.toString());
+                addCourse(new Course(jsonArray.getJSONObject(i)));
             }
         } catch (JSONException e) {
             Log.e("grade rescourse", e.toString());
@@ -126,16 +127,6 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
 
         courseAdapter  = new CourseAdapter(this, courseData);
         courseList.setAdapter(courseAdapter);
-
-        BarGraphSeries<DataPoint> series = new BarGraphSeries<>(new DataPoint[] {
-                new DataPoint(1, etcs[0]),
-                new DataPoint(2, etcs[1]),
-                new DataPoint(3, etcs[2]),
-                new DataPoint(4, etcs[3])
-        });
-        series.setSpacing(5);
-        series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
-        graph.addSeries(series);
 
         graph.getGridLabelRenderer().setHorizontalLabelsVisible(true);
         graph.getGridLabelRenderer().setNumHorizontalLabels(6);
@@ -155,6 +146,7 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
 
         setupSumEct();
         setupPeriod();
+        setupGraphData();
     }
 
     @Override
