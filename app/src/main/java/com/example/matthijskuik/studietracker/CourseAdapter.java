@@ -55,9 +55,9 @@ public class CourseAdapter extends BaseAdapter {
         TextView details = (TextView) v.findViewById(R.id.details);
         TextView grade = (TextView) v.findViewById(R.id.grade);
         final Course course = (Course) getItem(position);
-        name.setText(course.name);
-        details.setText("ect:" + String.valueOf(course.ect) + ", period:" + String.valueOf(course.period));
-        grade.setText(String.valueOf(course.grade));
+        name.setText(course.getName());
+        details.setText(String.format("ect:%d, period:%d", course.getEct(), course.getPeriod()));
+        grade.setText(String.valueOf(course.getGrade()));
 
         Log.i("view " + position + "/" + getCount(), ((Course) getItem(position)).toString());
 

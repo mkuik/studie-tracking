@@ -22,4 +22,5 @@
   {"name":"ICOMMP","ects": "3","grade": "1","period": "4"},
   {"name":"ISLP","ects": "1","grade": "1","period": "4"}
 ]</string>
+  <string name="naam_invoer_hint">Naam</string>
 </resources>

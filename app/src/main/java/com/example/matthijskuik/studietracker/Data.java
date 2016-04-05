@@ -34,7 +34,7 @@ public class Data {
     }
 
     public void setCourse(final Course course) throws IOException, JSONException {
-        FileOutputStream fos = context.openFileOutput(course.name, Context.MODE_PRIVATE);
+        FileOutputStream fos = context.openFileOutput(course.getName(), Context.MODE_PRIVATE);
         fos.write(course.toJSON().toString().getBytes());
         fos.close();
     }

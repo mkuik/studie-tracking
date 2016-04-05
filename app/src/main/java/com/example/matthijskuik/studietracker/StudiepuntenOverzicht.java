@@ -22,6 +22,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -36,11 +38,11 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
     private TextView advice;
     private TextView name;
     private TextView period;
+    private Data data;
 
     public void addCourse(final Course course) {
         courseData.add(course);
-        etcs[course.period - 1] += course.ect;
-//        courseAdapter.add(course);
+        etcs[course.getPeriod() - 1] += course.getEct();
     }
 
     public short getSumEct() {
@@ -76,7 +78,7 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         } else {
             i = 5;
         }
-        period.setText(String.format("Period %d", i));
+        period.setText(String.format("Periode %d", i));
     }
 
     public void setupGraphData() {
@@ -89,6 +91,47 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         series.setSpacing(5);
         series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
         graph.addSeries(series);
+
+        // Adapt graph y bounds to values
+        short max = Short.MIN_VALUE;
+        for (short i : etcs) if (i > max) max = i;
+        graph.getViewport().setMaxY(max);
+    }
+
+    public void loadData() {
+        try {
+            final JSONArray courses = data.getCourseNames();
+            for (int i = 0; i != courses.length(); ++i) {
+                Course course = data.getCourse(courses.getString(i));
+                addCourse(course);
+            }
+        } catch (FileNotFoundException e1) {
+            Log.e("load from init", e1.toString());
+            try {
+                JSONArray courses = new JSONArray(getString(R.string.grades));
+                for (int i = 0; i != courses.length(); ++i) {
+                    Course course = new Course(courses.getJSONObject(i));
+                    addCourse(course);
+                    data.setCourse(course);
+                }
+            } catch (JSONException | IOException e2) {
+                Log.e("load from init", e2.toString());
+            }
+        } catch (JSONException | IOException e) {
+            Log.e("load from save", e.toString());
+        }
+    }
+
+    public void saveData() {
+        JSONArray courses = new JSONArray();
+        for (final Course course : courseData) {
+            courses.put(course.getName());
+        }
+        try {
+            data.setCourseNames(courses);
+        } catch (IOException e) {
+            Log.e("save courses", e.toString());
+        }
     }
 
     @Override
@@ -113,18 +156,9 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         name = (EditText) findViewById(R.id.name);
         period = (TextView) findViewById(R.id.period);
 
+        data = new Data(this);
         courseData = new ArrayList<>();
         etcs = new short[4];
-
-        try {
-            JSONArray jsonArray = new JSONArray(getString(R.string.grades));
-            for (int i = 0; i != jsonArray.length(); ++i) {
-                addCourse(new Course(jsonArray.getJSONObject(i)));
-            }
-        } catch (JSONException e) {
-            Log.e("grade rescourse", e.toString());
-        }
-
         courseAdapter  = new CourseAdapter(this, courseData);
         courseList.setAdapter(courseAdapter);
 
@@ -140,9 +174,8 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         // set manual Y bounds
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setMinY(0);
-        short max = Short.MIN_VALUE;
-        for (short i : etcs) if (i > max) max = i;
-        graph.getViewport().setMaxY(max);
+
+        loadData();
 
         setupSumEct();
         setupPeriod();

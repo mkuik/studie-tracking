@@ -26,18 +26,17 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
-                android:text="Name"
                 android:ems="10"
                 android:id="@+id/name"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:hint="@string/naam_invoer_hint"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="N"
                 android:id="@+id/period"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin" />
@@ -46,8 +45,7 @@
         <com.jjoe64.graphview.GraphView
             android:layout_width="match_parent"
             android:layout_height="100dp"
-            android:id="@+id/grade_graph"
-            android:layout_weight="0" />
+            android:id="@+id/grade_graph" />
 
         <LinearLayout
             android:orientation="horizontal"
@@ -61,14 +59,12 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:id="@+id/total_ect"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:text="sum ect" />
+                android:paddingRight="@dimen/activity_horizontal_margin" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="advies"
                 android:id="@+id/advice"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin" />
