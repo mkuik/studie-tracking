@@ -82,6 +82,7 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
     }
 
     public void setupGraphData() {
+        graph.removeAllSeries();
         BarGraphSeries<DataPoint> series = new BarGraphSeries<>(new DataPoint[] {
                 new DataPoint(1, etcs[0]),
                 new DataPoint(2, etcs[1]),
@@ -99,22 +100,24 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
     }
 
     public void loadData() {
+        courseData.clear();
         try {
             final JSONArray courses = data.getCourseNames();
+            Log.i("load courses", courses.toString());
             for (int i = 0; i != courses.length(); ++i) {
                 Course course = data.getCourse(courses.getString(i));
                 addCourse(course);
             }
         } catch (FileNotFoundException e1) {
-            Log.e("load from init", e1.toString());
+            Log.i("load from init", e1.toString());
             try {
                 JSONArray courses = new JSONArray(getString(R.string.grades));
                 for (int i = 0; i != courses.length(); ++i) {
                     Course course = new Course(courses.getJSONObject(i));
                     addCourse(course);
-                    data.setCourse(course);
+                    course.setEdited(true);
                 }
-            } catch (JSONException | IOException e2) {
+            } catch (JSONException e2) {
                 Log.e("load from init", e2.toString());
             }
         } catch (JSONException | IOException e) {
@@ -127,11 +130,31 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         for (final Course course : courseData) {
             courses.put(course.getName());
         }
+        Log.i("save courses", courses.toString());
         try {
             data.setCourseNames(courses);
-        } catch (IOException e) {
+            for (int i = 0; i != courses.length(); ++i) {
+                final Course course = courseData.get(i);
+                if (course.isEdited()) data.setCourse(course);
+            }
+        } catch (IOException | JSONException e) {
             Log.e("save courses", e.toString());
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        saveData();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadData();
+        setupSumEct();
+        setupPeriod();
+        setupGraphData();
     }
 
     @Override
@@ -159,7 +182,7 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         data = new Data(this);
         courseData = new ArrayList<>();
         etcs = new short[4];
-        courseAdapter  = new CourseAdapter(this, courseData);
+        courseAdapter = new CourseAdapter(this, courseData);
         courseList.setAdapter(courseAdapter);
 
         graph.getGridLabelRenderer().setHorizontalLabelsVisible(true);
@@ -174,12 +197,6 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         // set manual Y bounds
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setMinY(0);
-
-        loadData();
-
-        setupSumEct();
-        setupPeriod();
-        setupGraphData();
     }
 
     @Override

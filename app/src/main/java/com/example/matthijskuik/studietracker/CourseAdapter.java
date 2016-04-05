@@ -59,8 +59,6 @@ public class CourseAdapter extends BaseAdapter {
         details.setText(String.format("ect:%d, period:%d", course.getEct(), course.getPeriod()));
         grade.setText(String.valueOf(course.getGrade()));
 
-        Log.i("view " + position + "/" + getCount(), ((Course) getItem(position)).toString());
-
         return v;
     }
 }

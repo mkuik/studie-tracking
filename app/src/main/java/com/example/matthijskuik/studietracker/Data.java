@@ -1,6 +1,7 @@
 package com.example.matthijskuik.studietracker;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,6 +31,7 @@ public class Data {
         FileInputStream fis = context.openFileInput(name);
         final JSONObject obj = new JSONObject(convertStreamToString(fis));
         fis.close();
+        Log.i("load course", obj.toString());
         return new Course(obj);
     }
 
@@ -37,6 +39,7 @@ public class Data {
         FileOutputStream fos = context.openFileOutput(course.getName(), Context.MODE_PRIVATE);
         fos.write(course.toJSON().toString().getBytes());
         fos.close();
+        Log.i("save course", course.toString());
     }
 
     public JSONArray getCourseNames() throws IOException, JSONException {
