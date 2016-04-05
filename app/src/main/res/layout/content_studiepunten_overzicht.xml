@@ -23,18 +23,15 @@
             android:layout_height="match_parent">
 
             <EditText
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
                 android:text="Name"
                 android:ems="10"
                 android:id="@+id/name"
-                android:paddingBottom="@dimen/activity_vertical_margin"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingTop="@dimen/activity_vertical_margin"
-                android:layout_weight="1"
-                android:editable="false" />
+                android:layout_weight="1" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -42,10 +39,8 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="N"
                 android:id="@+id/period"
-                android:paddingBottom="@dimen/activity_vertical_margin"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingTop="@dimen/activity_vertical_margin" />
+                android:paddingRight="@dimen/activity_horizontal_margin" />
         </LinearLayout>
 
         <com.jjoe64.graphview.GraphView
@@ -57,17 +52,16 @@
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:paddingBottom="@dimen/activity_vertical_margin">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:id="@+id/total_ect"
-                android:paddingBottom="@dimen/activity_vertical_margin"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingTop="@dimen/activity_vertical_margin"
                 android:text="sum ect" />
 
             <TextView
@@ -76,10 +70,9 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="advies"
                 android:id="@+id/advice"
-                android:paddingBottom="@dimen/activity_vertical_margin"
                 android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingTop="@dimen/activity_vertical_margin" />
+                android:paddingRight="@dimen/activity_horizontal_margin" />
+
         </LinearLayout>
 
         <ListView
