@@ -1,8 +1,5 @@
 package com.example.matthijskuik.studietracker;
 
-import android.content.Context;
-import android.database.DataSetObserver;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -10,31 +7,23 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.BarGraphSeries;
 import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Calendar;
 
 public class StudiepuntenOverzicht extends AppCompatActivity {
 
@@ -60,7 +49,7 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         return sum;
     }
 
-    public void notifyEctChange() {
+    public void setupSumEct() {
         final short score = getSumEct();
         ectScore.setText(String.format("%d ects", score));
         if (score <= 40) {
@@ -70,6 +59,24 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         } else {
             advice.setText("Goed bezig!");
         }
+    }
+
+    public void setupPeriod() {
+        Calendar c = Calendar.getInstance();
+        final int week = c.get(Calendar.WEEK_OF_YEAR);
+        short i = 0;
+        if (week >= 35 && week <= 46) {
+            i = 1;
+        } else if(week <= 53 || week <= 5) {
+            i = 2;
+        } else if(week <= 16) {
+            i = 3;
+        } else if(week <= 28) {
+            i = 4;
+        } else {
+            i = 5;
+        }
+        period.setText(String.format("Period %d", i));
     }
 
     @Override
@@ -146,7 +153,8 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         for (short i : etcs) if (i > max) max = i;
         graph.getViewport().setMaxY(max);
 
-        notifyEctChange();
+        setupSumEct();
+        setupPeriod();
     }
 
     @Override
