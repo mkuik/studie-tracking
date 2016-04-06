@@ -7,9 +7,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -20,20 +20,88 @@ import com.jjoe64.graphview.series.DataPoint;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class StudiepuntenOverzicht extends AppCompatActivity {
+public class Hoofdscherm extends AppCompatActivity {
 
+    private GraphView graph;
     private ArrayList<Course> courseData;
+    private TextView ectScore;
+    private TextView advice;
+    private TextView name;
+    private TextView period;
     private Data data;
 
     public void addCourse(final Course course) {
         courseData.add(course);
+    }
+
+    public short[] getPeriodEctScores() {
+        short[] etcs = new short[4];
+        for (final Course course : courseData) etcs[course.getPeriod() - 1] += course.getEct();
+        return etcs;
+    }
+
+    public short getSumEct() {
+        short sum = 0;
+        for (final Course course : courseData) sum += course.getEct();
+        return sum;
+    }
+
+    public void setupSumEct() {
+        final short score = getSumEct();
+        ectScore.setText(String.format("%d punten", score));
+        if (score <= 40) {
+            advice.setText("BSA");
+        } else if (score <= 50) {
+            advice.setText("Blijft zitten");
+        } else {
+            advice.setText("Goed bezig!");
+        }
+    }
+
+    public void setupPeriod() {
+        Calendar c = Calendar.getInstance();
+        final int week = c.get(Calendar.WEEK_OF_YEAR);
+        short i = 0;
+        if (week >= 35 && week <= 46) {
+            i = 1;
+        } else if((week >= 47 && week <= 53) || week <= 5) {
+            i = 2;
+        } else if(week <= 16) {
+            i = 3;
+        } else if(week <= 28) {
+            i = 4;
+        } else {
+            i = 5;
+        }
+        period.setText(String.format("Periode %d", i));
+    }
+
+    public void setupGraphData() {
+        graph.removeAllSeries();
+        final short[] etcs = getPeriodEctScores();
+
+        graph.getViewport().setMaxX(courseData.size() + 1);
+        BarGraphSeries<DataPoint> series = new BarGraphSeries<>();
+        for (int i = 0; i != courseData.size(); ++i) {
+            DataPoint dataPoint = new DataPoint(i + 1, courseData.get(i).getEct());
+            series.appendData(dataPoint, false, courseData.size() + 1);
+
+            Log.i("series append", courseData.get(i).toString());
+        }
+        series.setSpacing(6);
+        series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
+        graph.addSeries(series);
+
+        // Adapt graph y bounds to values
+        short max = Short.MIN_VALUE;
+        for (Course course : courseData) if (course.getEct() > max) max = course.getEct();
+        graph.getViewport().setMaxY(max);
     }
 
     public void loadData() {
@@ -89,29 +157,39 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadData();
+        setupSumEct();
+        setupPeriod();
+        setupGraphData();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_studiepunten_overzicht);
+        setContentView(R.layout.activity_hoofdscherm);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-        ListView courseList = (ListView) findViewById(R.id.grade_details);
+        graph = (GraphView) findViewById(R.id.course_overview);
+        ectScore = (TextView) findViewById(R.id.total_ect);
+        advice = (TextView) findViewById(R.id.advice);
+        name = (EditText) findViewById(R.id.name);
+        period = (TextView) findViewById(R.id.period);
 
         data = new Data(this);
         courseData = new ArrayList<>();
-        CourseAdapter courseAdapter = new CourseAdapter(this, courseData);
-        courseList.setAdapter(courseAdapter);
+
+        graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
+        graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
+        graph.getGridLabelRenderer().setNumHorizontalLabels(0);
+        graph.getGridLabelRenderer().setNumVerticalLabels(0);
+
+        // set manual X bounds
+        graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setMinX(0);
+
+        // set manual Y bounds
+        graph.getViewport().setYAxisBoundsManual(true);
+        graph.getViewport().setMinY(0);
     }
 
     @Override
