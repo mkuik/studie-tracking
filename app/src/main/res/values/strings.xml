@@ -23,4 +23,9 @@
   {"name":"ISLP","ects": "1","grade": "1","period": "4"}
 ]</string>
   <string name="naam_invoer_hint">Naam</string>
+  <string name="action_hoofdscherm">Hoofdscherm</string>
+  <string name="action_invoerscherm">Invoerscherm</string>
+  <string name="ok">OK</string>
+  <string name="cancel">Cancel</string>
+  <string name="action_overzichtsserm">Overzichtsscherm</string>
 </resources>

@@ -1,10 +1,20 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.example.matthijskuik.studietracker.StudiepuntenOverzicht">
+    tools:context=".Invoerscherm">
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_hoofdscherm"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:title="@string/action_hoofdscherm"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_invoerscherm"
+        android:orderInCategory="100"
+        android:title="@string/action_invoerscherm"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_overzichtsscherm"
+        android:orderInCategory="100"
+        android:title="@string/action_overzichtsserm"
         app:showAsAction="never" />
 </menu>

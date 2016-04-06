@@ -1,17 +1,14 @@
 package com.example.matthijskuik.studietracker;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
@@ -20,20 +17,40 @@ import com.jjoe64.graphview.series.DataPoint;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class StudiepuntenOverzicht extends AppCompatActivity {
+public class Overzichtsscherm extends AppCompatActivity {
 
+    private GraphView graph;
     private ArrayList<Course> courseData;
     private Data data;
 
     public void addCourse(final Course course) {
         courseData.add(course);
+    }
+
+    public short[] getPeriodEctScores() {
+        short[] etcs = new short[4];
+        for (final Course course : courseData) etcs[course.getPeriod() - 1] += course.getEct();
+        return etcs;
+    }
+
+    public void setupGraphData() {
+        graph.removeAllSeries();
+        final short[] etcs = getPeriodEctScores();
+
+        BarGraphSeries<DataPoint> series = new BarGraphSeries<>();
+        for (int i = 0; i != etcs.length; ++i) {
+            DataPoint dataPoint = new DataPoint(i + 1, etcs[i]);
+            series.appendData(dataPoint, false, etcs.length + 1);
+        }
+        series.setSpacing(6);
+        series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
+        graph.addSeries(series);
     }
 
     public void loadData() {
@@ -89,29 +106,36 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadData();
+        setupGraphData();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_studiepunten_overzicht);
+        setContentView(R.layout.activity_overzichtscherm);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-        ListView courseList = (ListView) findViewById(R.id.grade_details);
+        graph = (GraphView) findViewById(R.id.course_overview);
 
         data = new Data(this);
         courseData = new ArrayList<>();
-        CourseAdapter courseAdapter = new CourseAdapter(this, courseData);
-        courseList.setAdapter(courseAdapter);
+
+        graph.getGridLabelRenderer().setHorizontalLabelsVisible(true);
+        graph.getGridLabelRenderer().setVerticalLabelsVisible(true);
+        graph.getGridLabelRenderer().setNumHorizontalLabels(6);
+        graph.getGridLabelRenderer().setNumVerticalLabels(21);
+
+        graph.getViewport().setMaxX(5);
+        graph.getViewport().setMinX(0);
+        graph.getViewport().setMinY(0);
+        graph.getViewport().setMaxY(20);
+
+        // set manual X bounds
+        graph.getViewport().setXAxisBoundsManual(true);
+
+        // set manual Y bounds
+        graph.getViewport().setYAxisBoundsManual(true);
     }
 
     @Override
@@ -126,14 +150,19 @@ public class StudiepuntenOverzicht extends AppCompatActivity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch(item.getItemId()) {
+            case R.id.action_hoofdscherm:
+                this.startActivity(new Intent(this, Hoofdscherm.class));
+                return true;
+            case R.id.action_invoerscherm:
+                this.startActivity(new Intent(this, Invoerscherm.class));
+                return true;
+            case R.id.action_overzichtsscherm:
+                this.startActivity(new Intent(this, Overzichtsscherm.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
 

@@ -25,7 +25,8 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="ect &amp; period"
-            android:id="@+id/details" />
+            android:id="@+id/details"
+            android:visibility="gone" />
     </LinearLayout>
 
     <TextView

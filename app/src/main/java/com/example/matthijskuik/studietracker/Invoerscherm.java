@@ -1,19 +1,23 @@
 package com.example.matthijskuik.studietracker;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.nsd.NsdManager;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.EditText;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.TextView;
-
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.series.BarGraphSeries;
-import com.jjoe64.graphview.series.DataPoint;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,84 +25,14 @@ import org.json.JSONException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 
-public class Hoofdscherm extends AppCompatActivity {
+public class Invoerscherm extends AppCompatActivity {
 
-    private GraphView graph;
     private ArrayList<Course> courseData;
-    private TextView ectScore;
-    private TextView advice;
-    private TextView name;
-    private TextView period;
     private Data data;
 
     public void addCourse(final Course course) {
         courseData.add(course);
-    }
-
-    public short[] getPeriodEctScores() {
-        short[] etcs = new short[4];
-        for (final Course course : courseData) etcs[course.getPeriod() - 1] += course.getEct();
-        return etcs;
-    }
-
-    public short getSumEct() {
-        short sum = 0;
-        for (final Course course : courseData) sum += course.getEct();
-        return sum;
-    }
-
-    public void setupSumEct() {
-        final short score = getSumEct();
-        ectScore.setText(String.format("%d punten", score));
-        if (score <= 40) {
-            advice.setText("BSA");
-        } else if (score <= 50) {
-            advice.setText("Blijft zitten");
-        } else {
-            advice.setText("Goed bezig!");
-        }
-    }
-
-    public void setupPeriod() {
-        Calendar c = Calendar.getInstance();
-        final int week = c.get(Calendar.WEEK_OF_YEAR);
-        short i = 0;
-        if (week >= 35 && week <= 46) {
-            i = 1;
-        } else if((week >= 47 && week <= 53) || week <= 5) {
-            i = 2;
-        } else if(week <= 16) {
-            i = 3;
-        } else if(week <= 28) {
-            i = 4;
-        } else {
-            i = 5;
-        }
-        period.setText(String.format("Periode %d", i));
-    }
-
-    public void setupGraphData() {
-        graph.removeAllSeries();
-        final short[] etcs = getPeriodEctScores();
-
-        graph.getViewport().setMaxX(courseData.size() + 1);
-        BarGraphSeries<DataPoint> series = new BarGraphSeries<>();
-        for (int i = 0; i != courseData.size(); ++i) {
-            DataPoint dataPoint = new DataPoint(i + 1, courseData.get(i).getEct());
-            series.appendData(dataPoint, false, courseData.size() + 1);
-
-            Log.i("series append", courseData.get(i).toString());
-        }
-        series.setSpacing(6);
-        series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
-        graph.addSeries(series);
-
-        // Adapt graph y bounds to values
-        short max = Short.MIN_VALUE;
-        for (Course course : courseData) if (course.getEct() > max) max = course.getEct();
-        graph.getViewport().setMaxY(max);
     }
 
     public void loadData() {
@@ -154,39 +88,71 @@ public class Hoofdscherm extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadData();
-        setupSumEct();
-        setupPeriod();
-        setupGraphData();
+    }
+
+    private Dialog createDetailsscherm(final Course course) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Get the layout inflater
+        LayoutInflater inflater = getLayoutInflater();
+
+        // Inflate and set the layout for the dialog
+        // Pass null as the parent view because its going in the dialog layout
+        View view = inflater.inflate(R.layout.content_detailsscherm, null);
+        TextView vak = (TextView) view.findViewById(R.id.vak);
+        TextView grade = (TextView) view.findViewById(R.id.grade);
+        TextView ect = (TextView) view.findViewById(R.id.ect);
+        TextView period = (TextView) view.findViewById(R.id.period);
+
+        vak.setText(course.getName());
+        grade.setText(String.format("%.1f", course.getGrade()));
+        ect.setText(String.format("ECT %d", course.getEct()));
+        period.setText(String.format("Period %d", course.getPeriod()));
+
+        builder.setView(view)
+                // Add action buttons
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        // sign in the user ...
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                    }
+                });
+        return builder.create();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_hoofdscherm);
+        setContentView(R.layout.activity_invoerscherm);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        graph = (GraphView) findViewById(R.id.course_overview);
-        ectScore = (TextView) findViewById(R.id.total_ect);
-        advice = (TextView) findViewById(R.id.advice);
-        name = (EditText) findViewById(R.id.name);
-        period = (TextView) findViewById(R.id.period);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+        ListView courseList = (ListView) findViewById(R.id.grade_details);
+        courseList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final Course course = courseData.get(position);
+                Dialog dialog = createDetailsscherm(course);
+                dialog.show();
+            }
+        });
 
         data = new Data(this);
         courseData = new ArrayList<>();
-
-        graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
-        graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
-        graph.getGridLabelRenderer().setNumHorizontalLabels(0);
-        graph.getGridLabelRenderer().setNumVerticalLabels(0);
-
-        // set manual X bounds
-        graph.getViewport().setXAxisBoundsManual(true);
-        graph.getViewport().setMinX(0);
-
-        // set manual Y bounds
-        graph.getViewport().setYAxisBoundsManual(true);
-        graph.getViewport().setMinY(0);
+        CourseAdapter courseAdapter = new CourseAdapter(this, courseData);
+        courseList.setAdapter(courseAdapter);
     }
 
     @Override
@@ -201,6 +167,7 @@ public class Hoofdscherm extends AppCompatActivity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
         switch(item.getItemId()) {
             case R.id.action_hoofdscherm:
                 this.startActivity(new Intent(this, Hoofdscherm.class));
