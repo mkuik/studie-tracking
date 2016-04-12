@@ -1,6 +1,7 @@
 package com.example.matthijskuik.studietracker;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.ValueDependentColor;
 import com.jjoe64.graphview.series.BarGraphSeries;
 import com.jjoe64.graphview.series.DataPoint;
 
@@ -26,134 +28,86 @@ import java.util.Calendar;
 public class Hoofdscherm extends AppCompatActivity {
 
     private GraphView graph;
-    private ArrayList<Course> courseData;
     private TextView ectScore;
     private TextView advice;
     private TextView name;
     private TextView period;
     private Data data;
 
-    public void addCourse(final Course course) {
-        courseData.add(course);
-    }
-
-    public short[] getPeriodEctScores() {
-        short[] etcs = new short[4];
-        for (final Course course : courseData) etcs[course.getPeriod() - 1] += course.getEct();
-        return etcs;
-    }
-
-    public short getSumEct() {
-        short sum = 0;
-        for (final Course course : courseData) sum += course.getEct();
-        return sum;
-    }
-
     public void setupSumEct() {
-        final short score = getSumEct();
-        ectScore.setText(String.format("%d punten", score));
-        if (score <= 40) {
-            advice.setText("BSA");
-        } else if (score <= 50) {
-            advice.setText("Blijft zitten");
-        } else {
-            advice.setText("Goed bezig!");
+        short succes = 0;
+        short todo = 0;
+        final short period = Course.getCurrentPeriod();
+        for (final Course course : Data.getCourses()) {
+            if (course.isAPassingGrade()) {
+                succes += course.getEct();
+            } else if (period <= course.getPeriod()) {
+                todo += course.getEct();
+            }
         }
+        final int score = succes + todo;
+        ectScore.setText(String.format("%d punten", succes));
+        if (score <= 40) {
+            advice.setText(R.string.bsa_warning);
+        } else if (score <= 50) {
+            advice.setText(R.string.blijft_zitten_warning);
+        } else {
+            advice.setText(R.string.alles_gehaald_warning);
+        }
+
+
     }
 
     public void setupPeriod() {
-        Calendar c = Calendar.getInstance();
-        final int week = c.get(Calendar.WEEK_OF_YEAR);
-        short i = 0;
-        if (week >= 35 && week <= 46) {
-            i = 1;
-        } else if((week >= 47 && week <= 53) || week <= 5) {
-            i = 2;
-        } else if(week <= 16) {
-            i = 3;
-        } else if(week <= 28) {
-            i = 4;
-        } else {
-            i = 5;
-        }
-        period.setText(String.format("Periode %d", i));
+        period.setText(String.format("Periode %d", Course.getCurrentPeriod()));
     }
 
     public void setupGraphData() {
         graph.removeAllSeries();
-        final short[] etcs = getPeriodEctScores();
 
-        graph.getViewport().setMaxX(courseData.size() + 1);
+        graph.getViewport().setMaxX(Data.size() + 1);
         BarGraphSeries<DataPoint> series = new BarGraphSeries<>();
-        for (int i = 0; i != courseData.size(); ++i) {
-            DataPoint dataPoint = new DataPoint(i + 1, courseData.get(i).getEct());
-            series.appendData(dataPoint, false, courseData.size() + 1);
-
-            Log.i("series append", courseData.get(i).toString());
+        for (int i = 0; i != Data.size(); ++i) {
+            final Course course = Data.get(i);
+            DataPoint dataPoint = new DataPoint(i + 1, course.getEct());
+            series.appendData(dataPoint, false, Data.size() + 1);
+//            Log.i("series append", courseData.get(i).toString());
         }
+        final short period = Course.getCurrentPeriod();
+        final int passColor = ContextCompat.getColor(this, R.color.colorAccent);
+        series.setValueDependentColor(new ValueDependentColor<DataPoint>() {
+            @Override
+            public int get(DataPoint data) {
+                final Course course = Data.get((int) data.getX() - 1);
+                if (course.isAPassingGrade()) {
+                    return passColor;
+                } else if (period > course.getPeriod()) {
+                    return Color.RED;
+                } else {
+                    return Color.GRAY;
+                }
+            }
+        });
         series.setSpacing(6);
-        series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
         graph.addSeries(series);
 
         // Adapt graph y bounds to values
-        short max = Short.MIN_VALUE;
-        for (Course course : courseData) if (course.getEct() > max) max = course.getEct();
-        graph.getViewport().setMaxY(max);
-    }
-
-    public void loadData() {
-        courseData.clear();
-        try {
-            final JSONArray courses = data.getCourseNames();
-            Log.i("load courses", courses.toString());
-            for (int i = 0; i != courses.length(); ++i) {
-                Course course = data.getCourse(courses.getString(i));
-                addCourse(course);
-            }
-        } catch (FileNotFoundException e1) {
-            Log.i("load from init", e1.toString());
-            try {
-                JSONArray courses = new JSONArray(getString(R.string.grades));
-                for (int i = 0; i != courses.length(); ++i) {
-                    Course course = new Course(courses.getJSONObject(i));
-                    addCourse(course);
-                    course.setEdited(true);
-                }
-            } catch (JSONException e2) {
-                Log.e("load from init", e2.toString());
-            }
-        } catch (JSONException | IOException e) {
-            Log.e("load from save", e.toString());
-        }
-    }
-
-    public void saveData() {
-        JSONArray courses = new JSONArray();
-        for (final Course course : courseData) {
-            courses.put(course.getName());
-        }
-        Log.i("save courses", courses.toString());
-        try {
-            data.setCourseNames(courses);
-            for (int i = 0; i != courses.length(); ++i) {
-                final Course course = courseData.get(i);
-                if (course.isEdited()) data.setCourse(course);
-            }
-        } catch (IOException | JSONException e) {
-            Log.e("save courses", e.toString());
-        }
+        graph.getViewport().setMaxY(Data.getMaxEct());
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        saveData();
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadData();
+        try {
+            data.load();
+        } catch (JSONException | IOException e) {
+            Log.i("hoofd loading", e.toString());
+        }
         setupSumEct();
         setupPeriod();
         setupGraphData();
@@ -173,7 +127,6 @@ public class Hoofdscherm extends AppCompatActivity {
         period = (TextView) findViewById(R.id.period);
 
         data = new Data(this);
-        courseData = new ArrayList<>();
 
         graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
         graph.getGridLabelRenderer().setVerticalLabelsVisible(false);

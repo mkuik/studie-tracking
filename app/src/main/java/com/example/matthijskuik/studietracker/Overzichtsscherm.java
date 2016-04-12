@@ -1,6 +1,7 @@
 package com.example.matthijskuik.studietracker;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -26,86 +27,49 @@ import java.util.Calendar;
 public class Overzichtsscherm extends AppCompatActivity {
 
     private GraphView graph;
-    private ArrayList<Course> courseData;
     private Data data;
-
-    public void addCourse(final Course course) {
-        courseData.add(course);
-    }
-
-    public short[] getPeriodEctScores() {
-        short[] etcs = new short[4];
-        for (final Course course : courseData) etcs[course.getPeriod() - 1] += course.getEct();
-        return etcs;
-    }
 
     public void setupGraphData() {
         graph.removeAllSeries();
-        final short[] etcs = getPeriodEctScores();
 
-        BarGraphSeries<DataPoint> series = new BarGraphSeries<>();
-        for (int i = 0; i != etcs.length; ++i) {
-            DataPoint dataPoint = new DataPoint(i + 1, etcs[i]);
-            series.appendData(dataPoint, false, etcs.length + 1);
+        final short maxPeriod = Data.getMaxPeriod();
+        final short[] succes = new short[maxPeriod + 1];
+        final short[] failed = new short[maxPeriod + 1];
+        final short period = Course.getCurrentPeriod();
+        for (final Course course : Data.getCourses()) {
+            if (course.isAPassingGrade()) {
+                succes[course.getPeriod()] += course.getEct();
+            } else if (period > course.getPeriod()) {
+                failed[course.getPeriod()] += course.getEct();
+            }
         }
-        series.setSpacing(6);
-        series.setColor(ContextCompat.getColor(this, R.color.colorAccent));
-        graph.addSeries(series);
-    }
 
-    public void loadData() {
-        courseData.clear();
-        try {
-            final JSONArray courses = data.getCourseNames();
-            Log.i("load courses", courses.toString());
-            for (int i = 0; i != courses.length(); ++i) {
-                Course course = data.getCourse(courses.getString(i));
-                addCourse(course);
-            }
-        } catch (FileNotFoundException e1) {
-            Log.i("load from init", e1.toString());
-            try {
-                JSONArray courses = new JSONArray(getString(R.string.grades));
-                for (int i = 0; i != courses.length(); ++i) {
-                    Course course = new Course(courses.getJSONObject(i));
-                    addCourse(course);
-                    course.setEdited(true);
-                }
-            } catch (JSONException e2) {
-                Log.e("load from init", e2.toString());
-            }
-        } catch (JSONException | IOException e) {
-            Log.e("load from save", e.toString());
+        BarGraphSeries<DataPoint> succesSeries = new BarGraphSeries<>();
+        BarGraphSeries<DataPoint> failedSeries = new BarGraphSeries<>();
+        for (int i = 0; i <= maxPeriod; ++i) {
+            succesSeries.appendData(new DataPoint(i, succes[i]), false, succes.length);
+            failedSeries.appendData(new DataPoint(i, failed[i]), false, failed.length);
         }
-    }
+        succesSeries.setColor(ContextCompat.getColor(this, R.color.colorAccent));
+        failedSeries.setColor(Color.RED);
 
-    public void saveData() {
-        JSONArray courses = new JSONArray();
-        for (final Course course : courseData) {
-            courses.put(course.getName());
-        }
-        Log.i("save courses", courses.toString());
-        try {
-            data.setCourseNames(courses);
-            for (int i = 0; i != courses.length(); ++i) {
-                final Course course = courseData.get(i);
-                if (course.isEdited()) data.setCourse(course);
-            }
-        } catch (IOException | JSONException e) {
-            Log.e("save courses", e.toString());
-        }
+        graph.addSeries(succesSeries);
+        graph.addSeries(failedSeries);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        saveData();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadData();
+        try {
+            data.load();
+        } catch (JSONException | IOException e) {
+            Log.e("overzicht loading", e.toString());
+        }
         setupGraphData();
     }
 
@@ -119,7 +83,6 @@ public class Overzichtsscherm extends AppCompatActivity {
         graph = (GraphView) findViewById(R.id.course_overview);
 
         data = new Data(this);
-        courseData = new ArrayList<>();
 
         graph.getGridLabelRenderer().setHorizontalLabelsVisible(true);
         graph.getGridLabelRenderer().setVerticalLabelsVisible(true);

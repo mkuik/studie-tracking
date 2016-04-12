@@ -3,6 +3,8 @@ package com.example.matthijskuik.studietracker;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
+
 /**
  * Created by Matthijs Kuik on 31-3-2016.
  */
@@ -25,6 +27,28 @@ public class Course {
                 Short.parseShort(obj.getString("ects")),
                 Double.parseDouble(obj.getString("grade")),
                 Short.parseShort(obj.getString("period")));
+    }
+
+    public boolean isAPassingGrade() {
+        return grade >= 5.5;
+    }
+
+    public static short getCurrentPeriod() {
+        Calendar c = Calendar.getInstance();
+        final int week = c.get(Calendar.WEEK_OF_YEAR);
+        short i;
+        if (week >= 35 && week <= 46) {
+            i = 1;
+        } else if((week >= 47 && week <= 53) || week <= 5) {
+            i = 2;
+        } else if(week <= 16) {
+            i = 3;
+        } else if(week <= 28) {
+            i = 4;
+        } else {
+            i = 5;
+        }
+        return i;
     }
 
     public String toString() {

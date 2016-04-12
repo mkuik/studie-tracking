@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -25,69 +26,28 @@ import org.json.JSONException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Locale;
 
 public class Invoerscherm extends AppCompatActivity {
 
-    private ArrayList<Course> courseData;
     private Data data;
-
-    public void addCourse(final Course course) {
-        courseData.add(course);
-    }
-
-    public void loadData() {
-        courseData.clear();
-        try {
-            final JSONArray courses = data.getCourseNames();
-            Log.i("load courses", courses.toString());
-            for (int i = 0; i != courses.length(); ++i) {
-                Course course = data.getCourse(courses.getString(i));
-                addCourse(course);
-            }
-        } catch (FileNotFoundException e1) {
-            Log.i("load from init", e1.toString());
-            try {
-                JSONArray courses = new JSONArray(getString(R.string.grades));
-                for (int i = 0; i != courses.length(); ++i) {
-                    Course course = new Course(courses.getJSONObject(i));
-                    addCourse(course);
-                    course.setEdited(true);
-                }
-            } catch (JSONException e2) {
-                Log.e("load from init", e2.toString());
-            }
-        } catch (JSONException | IOException e) {
-            Log.e("load from save", e.toString());
-        }
-    }
-
-    public void saveData() {
-        JSONArray courses = new JSONArray();
-        for (final Course course : courseData) {
-            courses.put(course.getName());
-        }
-        Log.i("save courses", courses.toString());
-        try {
-            data.setCourseNames(courses);
-            for (int i = 0; i != courses.length(); ++i) {
-                final Course course = courseData.get(i);
-                if (course.isEdited()) data.setCourse(course);
-            }
-        } catch (IOException | JSONException e) {
-            Log.e("save courses", e.toString());
-        }
-    }
+    private CourseAdapter courseAdapter;
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        saveData();
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadData();
+        try {
+            data.load();
+        } catch (JSONException | IOException e) {
+            Log.e("invoer loading", e.toString());
+        }
     }
 
     private Dialog createDetailsscherm(final Course course) {
@@ -98,13 +58,13 @@ public class Invoerscherm extends AppCompatActivity {
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
         View view = inflater.inflate(R.layout.content_detailsscherm, null);
-        TextView vak = (TextView) view.findViewById(R.id.vak);
-        TextView grade = (TextView) view.findViewById(R.id.grade);
-        TextView ect = (TextView) view.findViewById(R.id.ect);
-        TextView period = (TextView) view.findViewById(R.id.period);
+        final TextView vak = (TextView) view.findViewById(R.id.vak);
+        final EditText grade = (EditText) view.findViewById(R.id.grade);
+        final TextView ect = (TextView) view.findViewById(R.id.ect);
+        final TextView period = (TextView) view.findViewById(R.id.period);
 
         vak.setText(course.getName());
-        grade.setText(String.format("%.1f", course.getGrade()));
+        grade.setText(String.format(Locale.US, "%.1f", course.getGrade()));
         ect.setText(String.format("ECT %d", course.getEct()));
         period.setText(String.format("Period %d", course.getPeriod()));
 
@@ -113,7 +73,55 @@ public class Invoerscherm extends AppCompatActivity {
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        // sign in the user ...
+                        course.setGrade(Double.parseDouble(grade.getText().toString()));
+                        try {
+                            data.save();
+                        } catch (JSONException | IOException e) {
+                            Log.e("invoer save", e.toString());
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                    }
+                });
+        return builder.create();
+    }
+
+
+
+    private Dialog createNieuwVakScherm() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Get the layout inflater
+        LayoutInflater inflater = getLayoutInflater();
+
+        // Inflate and set the layout for the dialog
+        // Pass null as the parent view because its going in the dialog layout
+        View view = inflater.inflate(R.layout.content_detailsscherm_nieuw_vak, null);
+        final EditText vak = (EditText) view.findViewById(R.id.vak);
+        final EditText grade = (EditText) view.findViewById(R.id.grade);
+        final EditText ect = (EditText) view.findViewById(R.id.ect);
+        final EditText period = (EditText) view.findViewById(R.id.period);
+
+        builder.setView(view)
+                // Add action buttons
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        final Course course = new Course(vak.getText().toString(),
+                                Short.parseShort(ect.getText().toString()),
+                                Double.parseDouble(grade.getText().toString()),
+                                Short.parseShort(period.getText().toString()));
+                        course.isEdited();
+                        data.add(course);
+                        data.sortByPeriod();
+                        courseAdapter.notifyDataSetChanged();
+                        try {
+                            data.save();
+                        } catch (JSONException | IOException e) {
+                            Log.e("invoer save", e.toString());
+                        }
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -135,23 +143,23 @@ public class Invoerscherm extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                createNieuwVakScherm().show();
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
             }
         });
         ListView courseList = (ListView) findViewById(R.id.grade_details);
         courseList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final Course course = courseData.get(position);
+                final Course course = Data.get(position);
                 Dialog dialog = createDetailsscherm(course);
                 dialog.show();
             }
         });
 
         data = new Data(this);
-        courseData = new ArrayList<>();
-        CourseAdapter courseAdapter = new CourseAdapter(this, courseData);
+        courseAdapter = new CourseAdapter(this, Data.getCourses());
         courseList.setAdapter(courseAdapter);
     }
 

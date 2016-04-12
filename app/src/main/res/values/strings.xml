@@ -28,4 +28,7 @@
   <string name="ok">OK</string>
   <string name="cancel">Cancel</string>
   <string name="action_overzichtsserm">Overzichtsscherm</string>
+  <string name="bsa_warning">BSA</string>
+  <string name="blijft_zitten_warning">Blijft zitten</string>
+  <string name="alles_gehaald_warning">Goed bezig!</string>
 </resources>
