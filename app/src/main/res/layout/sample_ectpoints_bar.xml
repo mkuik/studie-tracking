@@ -1,0 +1,16 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.example.matthijskuik.studietracker.ECTPointsBar
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:background="#ccc"
+        app:successColor="@color/colorPrimary"
+        app:successScore="6"
+        app:failedScore="7"
+        app:unknownScore="8"
+        app:textColor="@android:color/white" />
+
+</FrameLayout>

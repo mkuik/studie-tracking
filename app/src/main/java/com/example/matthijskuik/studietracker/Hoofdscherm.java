@@ -35,18 +35,18 @@ public class Hoofdscherm extends AppCompatActivity {
     private Data data;
 
     public void setupSumEct() {
-        short succes = 0;
+        short success = 0;
         short todo = 0;
         final short period = Course.getCurrentPeriod();
         for (final Course course : Data.getCourses()) {
             if (course.isAPassingGrade()) {
-                succes += course.getEct();
+                success += course.getEct();
             } else if (period <= course.getPeriod()) {
                 todo += course.getEct();
             }
         }
-        final int score = succes + todo;
-        ectScore.setText(String.format("%d punten", succes));
+        final int score = success + todo;
+        ectScore.setText(String.format("%d punten", success));
         if (score <= 40) {
             advice.setText(R.string.bsa_warning);
         } else if (score <= 50) {
@@ -54,8 +54,6 @@ public class Hoofdscherm extends AppCompatActivity {
         } else {
             advice.setText(R.string.alles_gehaald_warning);
         }
-
-
     }
 
     public void setupPeriod() {

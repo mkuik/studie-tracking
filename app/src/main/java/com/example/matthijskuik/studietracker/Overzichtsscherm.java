@@ -26,35 +26,52 @@ import java.util.Calendar;
 
 public class Overzichtsscherm extends AppCompatActivity {
 
-    private GraphView graph;
+    private ECTPointsBar period1bar;
+    private ECTPointsBar period2bar;
+    private ECTPointsBar period3bar;
+    private ECTPointsBar period4bar;
+    private TextView successTextView;
+    private TextView failedTextView;
+    private TextView unknownTextView;
     private Data data;
 
     public void setupGraphData() {
-        graph.removeAllSeries();
-
         final short maxPeriod = Data.getMaxPeriod();
-        final short[] succes = new short[maxPeriod + 1];
+        final short[] success = new short[maxPeriod + 1];
         final short[] failed = new short[maxPeriod + 1];
+        final short[] unknown = new short[maxPeriod + 1];
         final short period = Course.getCurrentPeriod();
+
+        int sumSuccess = 0;
+        int sumFailed = 0;
+        int sumUnknown = 0;
         for (final Course course : Data.getCourses()) {
             if (course.isAPassingGrade()) {
-                succes[course.getPeriod()] += course.getEct();
+                success[course.getPeriod()] += course.getEct();
+                sumSuccess += course.getEct();
             } else if (period > course.getPeriod()) {
                 failed[course.getPeriod()] += course.getEct();
+                sumFailed += course.getEct();
+            } else {
+                unknown[course.getPeriod()] += course.getEct();
+                sumUnknown += course.getEct();
             }
         }
 
-        BarGraphSeries<DataPoint> succesSeries = new BarGraphSeries<>();
-        BarGraphSeries<DataPoint> failedSeries = new BarGraphSeries<>();
-        for (int i = 0; i <= maxPeriod; ++i) {
-            succesSeries.appendData(new DataPoint(i, succes[i]), false, succes.length);
-            failedSeries.appendData(new DataPoint(i, failed[i]), false, failed.length);
-        }
-        succesSeries.setColor(ContextCompat.getColor(this, R.color.colorAccent));
-        failedSeries.setColor(Color.RED);
+        setECTBarValues(period1bar, success[1], failed[1], unknown[1]);
+        setECTBarValues(period2bar, success[2], failed[2], unknown[2]);
+        setECTBarValues(period3bar, success[3], failed[3], unknown[3]);
+        setECTBarValues(period4bar, success[4], failed[4], unknown[4]);
 
-        graph.addSeries(succesSeries);
-        graph.addSeries(failedSeries);
+        successTextView.setText(String.format("%d", sumSuccess));
+        failedTextView.setText(String.format("%d", sumFailed));
+        unknownTextView.setText(String.format("%d", sumUnknown));
+    }
+
+    private void setECTBarValues(ECTPointsBar bar, final int success, final int failed, final int unknown) {
+        bar.setSuccessValue(success);
+        bar.setFailedValue(failed);
+        bar.setUnknownValue(unknown);
     }
 
     @Override
@@ -80,25 +97,16 @@ public class Overzichtsscherm extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        graph = (GraphView) findViewById(R.id.course_overview);
+        period1bar = (ECTPointsBar) findViewById(R.id.period_1_ect_bar);
+        period2bar = (ECTPointsBar) findViewById(R.id.period_2_ect_bar);
+        period3bar = (ECTPointsBar) findViewById(R.id.period_3_ect_bar);
+        period4bar = (ECTPointsBar) findViewById(R.id.period_4_ect_bar);
+
+        successTextView = (TextView) findViewById(R.id.success_score);
+        failedTextView = (TextView) findViewById(R.id.failed_score);
+        unknownTextView = (TextView) findViewById(R.id.unknown_score);
 
         data = new Data(this);
-
-        graph.getGridLabelRenderer().setHorizontalLabelsVisible(true);
-        graph.getGridLabelRenderer().setVerticalLabelsVisible(true);
-        graph.getGridLabelRenderer().setNumHorizontalLabels(6);
-        graph.getGridLabelRenderer().setNumVerticalLabels(21);
-
-        graph.getViewport().setMaxX(5);
-        graph.getViewport().setMinX(0);
-        graph.getViewport().setMinY(0);
-        graph.getViewport().setMaxY(20);
-
-        // set manual X bounds
-        graph.getViewport().setXAxisBoundsManual(true);
-
-        // set manual Y bounds
-        graph.getViewport().setYAxisBoundsManual(true);
     }
 
     @Override

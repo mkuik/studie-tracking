@@ -1,0 +1,12 @@
+<resources>
+    <declare-styleable name="ECTPointsBar">
+        <attr name="successScore" format="integer" />
+        <attr name="failedScore" format="integer" />
+        <attr name="unknownScore" format="integer" />
+        <attr name="successColor" format="color|reference" />
+        <attr name="failedColor" format="color|reference" />
+        <attr name="unkownColor" format="color|reference" />
+        <attr name="textColor" format="color" />
+        <attr name="textSize" format="dimension" />
+    </declare-styleable>
+</resources>
